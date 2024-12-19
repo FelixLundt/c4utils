@@ -1,10 +1,3 @@
-# given two agents, play a match between them
-# return the result of the match
-# result is a tuple of (winner, moves)
-# winner is None if the match is a draw
-# moves is a list of moves made by each player
-# record moves, errors, results, and other relevant information
-
 import numpy as np
 from dataclasses import dataclass, field
 from typing import ClassVar, Tuple, Optional
@@ -36,7 +29,7 @@ class GameState:
         if self.winner is not None:
             raise ValueError(f"Game is already over. Winner: {self.winner}")
         if not rules.is_valid_move(self.board, move, self.current_player):
-            raise ValueError(f"Invalid move: {move}")
+            raise ValueError(f"Invalid move: {move}. Type: {type(move)}.")
         self.board = rules.apply_move(self.board, move, self.current_player)
         self.winner = rules.check_winner(self.board)
 
