@@ -9,5 +9,5 @@ import numpy as np
 
 def generate_move(board: np.ndarray, player: int, timeout: float) -> int:
     """Generate a random valid move."""
-    valid_moves = [col for col in range(board.shape[1]) if board[0][col] == 0]
+    valid_moves = [col for col in range(board.shape[1]) if board[-1][col] == 0]
     return np.random.choice(valid_moves)
