@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from c4utils.tournament.match import GameState, play_match
 from c4utils.examples.random_timeout_agent import generate_move_with_timeout as random_agent
-from c4utils.types import BOARD_SIZE, PLAYER1, PLAYER2, Move, NO_PLAYER
+from c4utils.c4_types import BOARD_SIZE, PLAYER1, PLAYER2, Move, NO_PLAYER
 
 @pytest.fixture
 def winning_board_player_1():
@@ -27,6 +27,12 @@ def board_after_first_move_0():
                      [0, 0, 0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0, 0, 0]])
+
+@pytest.fixture
+def leftmost_column_agent():
+    def generate_move(board, player, timeout):
+        return Move(np.argwhere(board[-1, :] == 0)[0, 0])
+    return generate_move
 
 def test_game_state_initialization():
     game_state = GameState()
@@ -79,7 +85,8 @@ def test_play_match_fails_on_exception():
     assert moves == [Move(0)]
     assert isinstance(error, ZeroDivisionError)
 
-def test_random_agent_does_not_fail():
-    _, moves, error = play_match(random_agent, lambda board, player, timeout: Move(0))
+def test_random_agent_does_not_fail(leftmost_column_agent):
+    _, moves, error = play_match(random_agent, leftmost_column_agent)
+    print(moves)
     assert error is None
     assert len(moves) >= 7

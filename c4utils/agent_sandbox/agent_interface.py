@@ -1,5 +1,5 @@
 import numpy as np
-from ..types import Player, Move, AgentFunction, BOARD_SIZE
+from ..c4_types import Player, Move, AgentFunction, BOARD_SIZE
 
 def validate_agent_function(func: AgentFunction) -> bool:
     """Validates that an agent function meets the required interface."""

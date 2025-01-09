@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import c4utils.game.rules as rules
-from c4utils.types import Player, Move, BOARD_SIZE, NO_PLAYER, PLAYER1, PLAYER2
+from c4utils.c4_types import Player, Move, BOARD_SIZE, NO_PLAYER, PLAYER1, PLAYER2
 
 
 @pytest.fixture

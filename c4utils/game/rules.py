@@ -5,7 +5,7 @@
 # check for illegal move
 # check for game over
 import numpy as np
-from ..types import Board, Player, Move, BOARD_SIZE, NO_PLAYER, PLAYER1, PLAYER2
+from ..c4_types import Board, Player, Move, BOARD_SIZE, NO_PLAYER, PLAYER1, PLAYER2
 
 def apply_move(board: Board, move: Move, player: Player) -> Board:
     board = board.copy()

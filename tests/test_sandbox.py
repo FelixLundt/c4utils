@@ -4,10 +4,13 @@ import docker
 from docker.errors import ImageNotFound
 import numpy as np
 from c4utils.agent_sandbox.timeout import with_timeout, MoveTimeoutError
-from c4utils.agent_sandbox.agent_runner import SandboxedAgent, get_generate_move_func_from_container, get_move_from_container
+from c4utils.agent_sandbox.agent_runner import SandboxedAgent, \
+    get_generate_move_func_from_container, get_move_from_container, \
+    get_move_time_from_container
 from c4utils.examples.random_agent import generate_move as random_agent
 from c4utils.examples.random_timeout_agent import generate_move_with_timeout as random_agent_with_timeout
-from c4utils.types import Player, Move
+from c4utils.time_example_agents import move_time_random_agent, move_time_fixed_time_agent
+from c4utils.c4_types import Player, Move
 from c4utils.tournament.match import play_match
 
 @pytest.fixture(scope='session')
@@ -111,3 +114,10 @@ def test_match_between_containerized_random_agents(random_image):
         generate_move_func = get_generate_move_func_from_container(runner)
         winner, moves, error = play_match(generate_move_func, generate_move_func, move_timeout=timeout)
         assert error is None
+
+@pytest.mark.integration
+def test_random_agent_move_time_acceptance():
+    timeout = 1.
+    move_times = move_time_random_agent(timeout, iterations=10)
+    assert all(move_time <= 0.1 for move_time in move_times)
+

@@ -1,8 +1,8 @@
 import numpy as np
 from dataclasses import dataclass, field
 from typing import ClassVar, Tuple, Optional
-from c4utils.types import Board, Player, PLAYER1, PLAYER2, Move, BOARD_SIZE
-from c4utils.game import rules
+from ..c4_types import Board, Player, PLAYER1, PLAYER2, Move, BOARD_SIZE
+from ..game import rules
 
 class MoveTimeoutError(Exception):
     """Raised when an agent takes too long to generate a move"""

@@ -4,8 +4,8 @@ from docker.models.containers import Container
 from docker.errors import APIError as DockerAPIError, NotFound as DockerNotFound, ContainerError as DockerContainerError
 
 # Local imports
-from c4utils.tournament.match import AgentRuntimeError
-from c4utils.types import Board, Move, Player
+from ..tournament.match import AgentRuntimeError
+from ..c4_types import Board, Move, Player
 
 
 class SandboxedAgent:

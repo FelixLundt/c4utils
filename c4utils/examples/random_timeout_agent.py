@@ -7,7 +7,7 @@ use the timeout context manager. We can use internal types here again.
 from typing import cast
 from .random_agent import generate_move
 from c4utils.agent_sandbox.timeout import with_timeout
-from c4utils.types import Move, Player, Board
+from c4utils.c4_types import Move, Player, Board
 
 
 @with_timeout
