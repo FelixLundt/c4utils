@@ -16,7 +16,7 @@ ENV PYTHONPATH=/agent
 
 # Create wrapper script that applies the timeout decorator
 RUN echo 'from timeout import with_timeout\n\
-from examples import generate_move\n\
+from examples import generate_move_fixed_time\n\
 \n\
-generate_move_with_timeout = with_timeout(generate_move)' > agent.py
+generate_move = with_timeout(generate_move_fixed_time)\n' > agent.py
 
