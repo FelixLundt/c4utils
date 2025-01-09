@@ -25,19 +25,19 @@ def timeout(seconds: float):
 
 F = TypeVar('F', bound=Callable[..., Any])
 
-def with_timeout(seconds: float) -> Callable[[F], F]:
+def with_timeout(func: F) -> F:
     """
     Decorator that applies timeout to a function.
+    Expects the function to have timeout as its third argument.
     
     Usage:
-        @with_timeout(5.0)
+        @with_timeout
         def generate_move(board, player, timeout) -> Move:
             ...
     """
-    def decorator(func: F) -> F:
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            with timeout(seconds):
-                return func(*args, **kwargs)
-        return wrapper
-    return decorator 
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        _, _, timeout_value = args
+        with timeout(timeout_value):
+            return func(*args, **kwargs)
+    return wrapper
