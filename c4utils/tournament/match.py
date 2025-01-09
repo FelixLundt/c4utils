@@ -45,7 +45,7 @@ class GameState:
 
 def play_match(gen_move_func_player_1, gen_move_func_player_2,
                initial_board: Optional[Board] = None,
-               move_timeout: float = 5.0) -> Tuple[Player, list[Move], Optional[Exception]]:
+               move_timeout: float = 5.0) -> tuple[Player, list[Move], Optional[Exception]]:
     """
     Play a match between two agents with a timeout for each move.
     
@@ -74,5 +74,4 @@ def play_match(gen_move_func_player_1, gen_move_func_player_2,
         except Exception as e:
             opponent = PLAYER1 if game_state.current_player == PLAYER2 else PLAYER2
             return opponent, moves, e
-            
     return game_state.winner, moves, None
