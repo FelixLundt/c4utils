@@ -1,8 +1,11 @@
+"""
+Timing examples and benchmarks for different agent implementations.
+"""
 import time
 from typing import Callable
 import numpy as np
-from ..agent_sandbox.agent_runner import SandboxedAgent, get_move_time_from_container
-from ..c4_types import Player
+from c4utils.agent_sandbox.agent_runner import SandboxedAgent, get_move_time_from_container
+from c4utils.c4_types import Player
 
 
 def move_time_random_agent(timeout: float, iterations: int | None = None) -> list[float]:

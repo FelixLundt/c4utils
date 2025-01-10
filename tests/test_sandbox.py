@@ -4,13 +4,13 @@ import docker
 from docker.errors import ImageNotFound
 import numpy as np
 from c4utils.agent_sandbox.timeout import with_timeout, MoveTimeoutError
-from c4utils.agent_sandbox.agent_runner import SandboxedAgent, \
-    get_generate_move_func_from_container, get_move_from_container
-from c4utils.examples.random_agent import generate_move as random_agent
-from c4utils.examples.random_timeout_agent import generate_move_with_timeout as random_agent_with_timeout
-from c4utils.examples.time_example_agents import move_time_random_agent, move_time_fixed_time_agent
 from c4utils.c4_types import Player, Move
 from c4utils.tournament.match import play_match
+from c4utils.agent_sandbox.agent_runner import SandboxedAgent, \
+    get_generate_move_func_from_container, get_move_from_container
+from examples.agents.random_agent import generate_move as random_agent
+from examples.agents.random_timeout_agent import generate_move_with_timeout as random_agent_with_timeout
+from examples.timing.time_example_agents import move_time_random_agent, move_time_fixed_time_agent
 
 @pytest.fixture(scope='session')
 def random_image():
@@ -128,4 +128,3 @@ def test_fixed_time_agent_move_time_acceptance():
     overheads = [move_time - timeout/2. for move_time in move_times]
     print(f'Overheads: {overheads}')
     assert all(overhead < 0.01 for overhead in overheads)
-

@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from c4utils.tournament.match import GameState, play_match
-from c4utils.examples.random_timeout_agent import generate_move_with_timeout as random_agent
+from examples.agents.random_timeout_agent import generate_move_with_timeout as random_agent
 from c4utils.c4_types import BOARD_SIZE, PLAYER1, PLAYER2, Move, NO_PLAYER
 
 @pytest.fixture
