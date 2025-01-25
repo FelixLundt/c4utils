@@ -1,0 +1,12 @@
+services:
+  dev:
+    build: .
+    volumes:
+      - .:/workspace  # Note that this is a bind mount - changes to files on host are reflected in container (and vice versa)
+
+    # Enable debugging
+    ports:
+      - "5678:5678"  # for debugpy
+    # Add these for better development experience
+    tty: true        # Keeps container running and provides terminal
+    stdin_open: true # Enables interactive sessions
