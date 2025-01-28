@@ -5,3 +5,5 @@
 .pytest_cache
 *github
 *.sif
+examples/agent_fixed_time/
+examples/agent_random
