@@ -3,10 +3,13 @@ import subprocess
 import json
 import numpy as np
 from pathlib import Path
+from uuid import uuid4
+import hashlib
 
 # Local imports
 from ..tournament.match import AgentRuntimeError
 from ..c4_types import Board, Move, Player
+
 
 class SandboxedAgent:
     """
@@ -14,24 +17,48 @@ class SandboxedAgent:
     """
 
     def __init__(self, sif_path: Path):
-        self.sif_path = sif_path
-        self.instance_name = f"agent_{hash(str(sif_path))}"  # Unique instance name
+        """Initialize the agent runner with either a SIF file or sandbox directory"""
+        self.container_path = str(sif_path)
+        # Create a short hash of the path (first 4 chars) + random uuid (4 chars)
+        path_hash = hashlib.md5(self.container_path.encode()).hexdigest()[:4]
+        random_suffix = uuid4().hex[:4]
+        self.instance_name = f"{path_hash}_{random_suffix}"
         self.instance = None
 
     def __enter__(self):
         try:
-            # Start the Apptainer instance
-            subprocess.run(
+            # Start the Apptainer instance with minimal options
+            result = subprocess.run(
                 ["apptainer", "instance", "start",
-                 "--memory", "512m",  # Memory limit
-                 "--cpu-shares", "512",  # CPU limit (half of default 1024)
-                 self.sif_path,
+                 self.container_path,
                  self.instance_name],
+                capture_output=True,
+                text=True,
                 check=True
             )
+
+            # Verify the instance is running
+            verify = subprocess.run(
+                ["apptainer", "instance", "list"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            if self.instance_name not in verify.stdout:
+                raise AgentRuntimeError(
+                    f"Container failed to start. Start output: {result.stderr}\n"
+                    f"Instance list: {verify.stdout}"
+                )
+            
             return self
         except subprocess.CalledProcessError as e:
-            raise AgentRuntimeError(f"Failed to start container: {str(e)}")
+            raise AgentRuntimeError(
+                f"Failed to start container: {str(e)}\n"
+                f"stderr: {e.stderr if hasattr(e, 'stderr') else 'no stderr'}"
+            )
+        except Exception as e:
+            raise AgentRuntimeError(f"Unexpected error starting container: {str(e)}")
 
     def cleanup(self):
         if self.instance_name:
@@ -68,6 +95,56 @@ class SandboxedAgent:
             raise AgentRuntimeError(f"Container execution failed: {str(e)}")
         except Exception as e:
             raise AgentRuntimeError(f"Unexpected error: {str(e)}")
+        
+
+class DevSandboxedAgent(SandboxedAgent):
+    """
+    Sandboxed agent for development purposes.
+    """
+    def __init__(self, sandbox_path: Path):
+        """Initialize the agent runner with a sandbox directory path"""
+        assert sandbox_path.exists(), f"Sandbox path {sandbox_path} does not exist"
+        assert sandbox_path.is_dir(), f"Sandbox path {sandbox_path} is not a directory"
+        super().__init__(sandbox_path)
+
+    def __enter__(self):
+        try:
+            # Start the Apptainer instance with minimal options
+            result = subprocess.run(
+                ["apptainer", "instance", "start",
+                 "--contain",     # Use minimal /dev and empty other directories
+                 "--containall",  # Contain not only file systems, but also PID, IPC, and environment
+                 "--cleanenv",    # Clean environment before running container
+                 "--writable",    # Allow writes to sandbox
+                 self.container_path,
+                 self.instance_name],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+
+            # Verify the instance is running
+            verify = subprocess.run(
+                ["apptainer", "instance", "list"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            if self.instance_name not in verify.stdout:
+                raise AgentRuntimeError(
+                    f"Container failed to start. Start output: {result.stderr}\n"
+                    f"Instance list: {verify.stdout}"
+                )
+            
+            return self
+        except subprocess.CalledProcessError as e:
+            raise AgentRuntimeError(
+                f"Failed to start container: {str(e)}\n"
+                f"stderr: {e.stderr if hasattr(e, 'stderr') else 'no stderr'}"
+            )
+        except Exception as e:
+            raise AgentRuntimeError(f"Unexpected error starting container: {str(e)}")
 
 
 def get_move_from_container(container: SandboxedAgent, board: Board, player: Player, timeout: float) -> Move:

@@ -4,12 +4,12 @@ Timing examples and benchmarks for different agent implementations.
 import time
 from typing import Callable
 import numpy as np
-from c4utils.agent_sandbox.agent_runner import SandboxedAgent, get_move_time_from_container
+from c4utils.agent_sandbox.agent_runner import SandboxedAgent, DevSandboxedAgent, get_move_time_from_container
 from c4utils.c4_types import Player
+from pathlib import Path
 
-
-def move_time_random_agent(timeout: float, iterations: int | None = None) -> list[float]:
-    with SandboxedAgent('random_agent') as runner:
+def move_time_sandboxed_random_agent(timeout: float, iterations: int | None = None) -> list[float]:
+    with DevSandboxedAgent(Path('/workspace/examples/agent_random')) as runner:
         board = np.zeros((6, 7), dtype=Player)
         player = Player(1)
         move_times = [] 
@@ -22,8 +22,36 @@ def move_time_random_agent(timeout: float, iterations: int | None = None) -> lis
                 move_times.append(move_time)
     return move_times
 
-def move_time_fixed_time_agent(timeout: float, iterations: int | None = None) -> list[float]:
-    with SandboxedAgent('fixed_time_agent') as runner:
+def move_time_random_agent_sif(timeout: float, iterations: int | None = None) -> list[float]:
+    with SandboxedAgent(Path('/workspace/examples/agent_random.sif')) as runner:
+        board = np.zeros((6, 7), dtype=Player)
+        player = Player(1)
+        move_times = []
+        if iterations is None:
+            move_time = get_move_time_from_container(runner, board, player, timeout)
+            move_times.append(move_time)
+        else: 
+            for _ in range(iterations):
+                move_time = get_move_time_from_container(runner, board, player, timeout)
+                move_times.append(move_time)
+    return move_times
+
+def move_time_sandboxed_fixed_time_agent(timeout: float, iterations: int | None = None) -> list[float]:
+    with DevSandboxedAgent(Path('/workspace/examples/agent_fixed_time')) as runner:
+        board = np.zeros((6, 7), dtype=Player)
+        player = Player(1)
+        move_times = []
+        if iterations is None:
+            move_time = get_move_time_from_container(runner, board, player, timeout)
+            move_times.append(move_time)
+        else: 
+            for _ in range(iterations):
+                move_time = get_move_time_from_container(runner, board, player, timeout)
+                move_times.append(move_time)
+    return move_times
+
+def move_time_fixed_time_agent_sif(timeout: float, iterations: int | None = None) -> list[float]:
+    with SandboxedAgent(Path('/workspace/examples/agent_fixed_time.sif')) as runner:
         board = np.zeros((6, 7), dtype=Player)
         player = Player(1)
         move_times = []
@@ -46,14 +74,14 @@ def print_results(move_time_func: Callable[[float, int | None], list[float]],
 
 def run_move_timing(timeout: float = 1.0, iterations: int = 10):
     print('Running agents in running container:')
-    for move_time_func in [move_time_random_agent, move_time_fixed_time_agent]:
+    for move_time_func in [move_time_sandboxed_random_agent, move_time_sandboxed_fixed_time_agent]:
         start_time = time.time()
         move_times = move_time_func(timeout, iterations)
         end_time = time.time()
         print_results(move_time_func, move_times, timeout, start_time, end_time)
         print('')
     print('Running agents in new container:')
-    for move_time_func in [move_time_random_agent, move_time_fixed_time_agent]:
+    for move_time_func in [move_time_sandboxed_random_agent, move_time_sandboxed_fixed_time_agent]:
         start_time = time.time()
         move_times = []
         for _ in range(iterations):
