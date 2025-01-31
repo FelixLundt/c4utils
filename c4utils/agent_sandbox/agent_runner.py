@@ -1,7 +1,5 @@
 from typing import Callable
 import subprocess
-import json
-import numpy as np
 from pathlib import Path
 from uuid import uuid4
 import hashlib
@@ -27,7 +25,10 @@ class SandboxedAgent:
 
     def __enter__(self):
         try:
-            # Start the Apptainer instance with minimal options
+            # Ensure cleanup of any existing instance with same name
+            self.cleanup()
+            
+            # Start the Apptainer instance 
             result = subprocess.run(
                 ["apptainer", "instance", "start",
                  self.container_path,
@@ -63,13 +64,24 @@ class SandboxedAgent:
     def cleanup(self):
         if self.instance_name:
             try:
-                subprocess.run(
-                    ["apptainer", "instance", "stop", self.instance_name],
+                # First check if the instance exists
+                result = subprocess.run(
+                    ["apptainer", "instance", "list"],
+                    capture_output=True,
+                    text=True,
                     check=True
                 )
-            except Exception:
-                # Silently ignore cleanup errors during deletion
-                pass
+                
+                # Only try to stop if instance exists
+                if self.instance_name in result.stdout:
+                    subprocess.run(
+                        ["apptainer", "instance", "stop", self.instance_name],
+                        capture_output=True,
+                        check=True
+                    )
+            except Exception as e:
+                # Log the error but don't raise
+                print(f"Warning: cleanup error for {self.instance_name}: {str(e)}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.cleanup()
@@ -95,56 +107,6 @@ class SandboxedAgent:
             raise AgentRuntimeError(f"Container execution failed: {str(e)}")
         except Exception as e:
             raise AgentRuntimeError(f"Unexpected error: {str(e)}")
-        
-
-class DevSandboxedAgent(SandboxedAgent):
-    """
-    Sandboxed agent for development purposes.
-    """
-    def __init__(self, sandbox_path: Path):
-        """Initialize the agent runner with a sandbox directory path"""
-        assert sandbox_path.exists(), f"Sandbox path {sandbox_path} does not exist"
-        assert sandbox_path.is_dir(), f"Sandbox path {sandbox_path} is not a directory"
-        super().__init__(sandbox_path)
-
-    def __enter__(self):
-        try:
-            # Start the Apptainer instance with minimal options
-            result = subprocess.run(
-                ["apptainer", "instance", "start",
-                 "--contain",     # Use minimal /dev and empty other directories
-                 "--containall",  # Contain not only file systems, but also PID, IPC, and environment
-                 "--cleanenv",    # Clean environment before running container
-                 "--writable",    # Allow writes to sandbox
-                 self.container_path,
-                 self.instance_name],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-
-            # Verify the instance is running
-            verify = subprocess.run(
-                ["apptainer", "instance", "list"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            
-            if self.instance_name not in verify.stdout:
-                raise AgentRuntimeError(
-                    f"Container failed to start. Start output: {result.stderr}\n"
-                    f"Instance list: {verify.stdout}"
-                )
-            
-            return self
-        except subprocess.CalledProcessError as e:
-            raise AgentRuntimeError(
-                f"Failed to start container: {str(e)}\n"
-                f"stderr: {e.stderr if hasattr(e, 'stderr') else 'no stderr'}"
-            )
-        except Exception as e:
-            raise AgentRuntimeError(f"Unexpected error starting container: {str(e)}")
 
 
 def get_move_from_container(container: SandboxedAgent, board: Board, player: Player, timeout: float) -> Move:
