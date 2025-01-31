@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "c4utils"
+version = "0.1.0"
+description = "Utilities for C4 League"
+authors = [{ name = "Felix Lundt" }]
+readme = "README.md"
+requires-python = ">=3.12"
+
+[tool.hatch.build.targets.wheel]
+packages = ["c4utils"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"] 
