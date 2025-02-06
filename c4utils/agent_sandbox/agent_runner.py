@@ -5,8 +5,7 @@ from uuid import uuid4
 import hashlib
 
 # Local imports
-from ..tournament.match import AgentRuntimeError
-from ..c4_types import Board, Move, Player
+from ..c4_types import Board, Move, Player, AgentRuntimeError
 
 
 class SandboxedAgent:

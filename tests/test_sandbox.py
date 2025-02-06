@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from c4utils.agent_sandbox.timeout import with_timeout, MoveTimeoutError
 from c4utils.c4_types import Player, Move
-from c4utils.tournament.match import play_match
+from c4utils.match import _play_match
 from c4utils.agent_sandbox.agent_runner import SandboxedAgent, get_generate_move_func_from_container
 from examples.agents.random_agent import generate_move as random_agent
 from examples.timing.time_example_agents import move_time_sandboxed_random_agent, move_time_sandboxed_fixed_time_agent
@@ -78,7 +78,7 @@ def test_match_between_sandboxed_agents(random_sandbox):
     timeout = 0.5
     with SandboxedAgent(random_sandbox) as player1, SandboxedAgent(random_sandbox) as player2:
         generate_move_funcs = [get_generate_move_func_from_container(player1), get_generate_move_func_from_container(player2)]
-        winner, moves, error = play_match(generate_move_funcs[0], generate_move_funcs[1], move_timeout=timeout)
+        winner, moves, error = _play_match(generate_move_funcs[0], generate_move_funcs[1], move_timeout=timeout)
         assert error is None
 
 # Move Time Acceptance Tests

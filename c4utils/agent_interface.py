@@ -1,6 +1,6 @@
 import numpy as np
 from .c4_types import Player, AgentFunction, BOARD_SIZE, PLAYER1, PLAYER2, Move
-from .game.rules import is_valid_move
+from .rules import is_valid_move
 
 VALIDATION_TIMEOUT = 1.0
 

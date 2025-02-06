@@ -1,16 +1,10 @@
 import numpy as np
 from dataclasses import dataclass, field
 from typing import ClassVar, Tuple, Optional
-from ..c4_types import Board, Player, PLAYER1, PLAYER2, Move, BOARD_SIZE
-from ..game import rules
-
-class MoveTimeoutError(Exception):
-    """Raised when an agent takes too long to generate a move"""
-    pass
-
-class AgentRuntimeError(Exception):
-    """Raised when an agent encounters an error during move generation"""
-    pass
+from pathlib import Path
+from .c4_types import Board, Player, PLAYER1, PLAYER2, Move, BOARD_SIZE
+from . import rules
+from .agent_sandbox.agent_runner import SandboxedAgent, get_generate_move_func_from_container
 
 @dataclass
 class GameState:
@@ -43,7 +37,7 @@ class GameState:
         return self.players[count_players.index(min(count_players))]
 
 
-def play_match(gen_move_func_player_1, gen_move_func_player_2,
+def _play_match(gen_move_func_player_1, gen_move_func_player_2,
                initial_board: Optional[Board] = None,
                move_timeout: float = 5.0) -> tuple[Player, list[Move], Optional[Exception]]:
     """
@@ -75,3 +69,11 @@ def play_match(gen_move_func_player_1, gen_move_func_player_2,
             opponent = PLAYER1 if game_state.current_player == PLAYER2 else PLAYER2
             return opponent, moves, e
     return game_state.winner, moves, None
+
+def play_match(agent_sandbox_sif_1: Path, agent_sandbox_sif_2: Path,
+               initial_board: Optional[Board] = None,
+               move_timeout: float = 5.0) -> tuple[Player, list[Move], Optional[Exception]]:
+    with SandboxedAgent(agent_sandbox_sif_1) as player_1, SandboxedAgent(agent_sandbox_sif_2) as player_2:
+        generate_move_func_player_1 = get_generate_move_func_from_container(player_1)
+        generate_move_func_player_2 = get_generate_move_func_from_container(player_2)
+        return _play_match(generate_move_func_player_1, generate_move_func_player_2, initial_board, move_timeout)

@@ -2,10 +2,8 @@ import signal
 from functools import wraps
 from typing import TypeVar, Callable, Any
 from contextlib import contextmanager
+from ..c4_types import MoveTimeoutError
 
-class MoveTimeoutError(Exception):
-    """Raised when function execution exceeds time limit"""
-    pass
 
 @contextmanager
 def timeout(seconds: float):

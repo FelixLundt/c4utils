@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import c4utils.game.rules as rules
+import c4utils.rules as rules
 from c4utils.c4_types import Player, Move, BOARD_SIZE, NO_PLAYER, PLAYER1, PLAYER2
 
 

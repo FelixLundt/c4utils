@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from c4utils.tournament.match import GameState, play_match
+from c4utils.match import GameState, _play_match
 from examples.agents.random_timeout_agent import generate_move_with_timeout as random_agent
 from c4utils.c4_types import BOARD_SIZE, PLAYER1, PLAYER2, Move, NO_PLAYER
 
@@ -74,19 +74,19 @@ def test_current_player_on_board_with_one_move(board_after_first_move_0):
     assert game_state.current_player == PLAYER2
 
 def test_play_match_succeeds_on_game_over(winning_board_player_1):
-    winner, moves, error = play_match(lambda board, player: Move(0), lambda board, player: Move(0), initial_board=winning_board_player_1)
+    winner, moves, error = _play_match(lambda board, player: Move(0), lambda board, player: Move(0), initial_board=winning_board_player_1)
     assert winner == PLAYER1
     assert moves == []
     assert error is None
 
 def test_play_match_fails_on_exception():
-    winner, moves, error = play_match(lambda board, player, timeout: Move(0), lambda board, player, timeout: 1/0)
+    winner, moves, error = _play_match(lambda board, player, timeout: Move(0), lambda board, player, timeout: 1/0)
     assert winner == PLAYER1
     assert moves == [Move(0)]
     assert isinstance(error, ZeroDivisionError)
 
 def test_random_agent_does_not_fail(leftmost_column_agent):
-    _, moves, error = play_match(random_agent, leftmost_column_agent)
+    _, moves, error = _play_match(random_agent, leftmost_column_agent)
     print(moves)
     assert error is None
     assert len(moves) >= 7
