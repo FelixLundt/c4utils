@@ -30,6 +30,9 @@ class SandboxedAgent:
             # Start the Apptainer instance 
             result = subprocess.run(
                 ["apptainer", "instance", "start",
+                 "--fakeroot",
+                 "--writable-tmpfs",
+                 "--contain",
                  self.container_path,
                  self.instance_name],
                 capture_output=True,
