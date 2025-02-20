@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 from uuid import uuid4
 import hashlib
+import json
 
 # Local imports
 from ..c4_types import Board, Move, Player, AgentRuntimeError
@@ -100,38 +101,48 @@ class SandboxedAgent:
                  "python3", "-c", cmd],
                 capture_output=True,
                 text=True,
-                check=True
+                check=False  # Don't raise on non-zero exit codes
             )
+            
+            if result.returncode != 0:
+                raise AgentRuntimeError(
+                    f"Agent failed with exit code {result.returncode}\n"
+                    f"stdout: {result.stdout}\n"
+                    f"stderr: {result.stderr}"
+                )
+            
             if result.stderr:
-                raise AgentRuntimeError(f"Agent failed: {result.stderr}")
+                # Log stderr even on success
+                print(f"Warning: Agent produced stderr: {result.stderr}")
+                
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
-            raise AgentRuntimeError(f"Container execution failed: {str(e)}")
+            raise AgentRuntimeError(
+                f"Container execution failed:\n"
+                f"stdout: {e.stdout if hasattr(e, 'stdout') else 'no stdout'}\n"
+                f"stderr: {e.stderr if hasattr(e, 'stderr') else 'no stderr'}"
+            )
         except Exception as e:
             raise AgentRuntimeError(f"Unexpected error: {str(e)}")
 
 
 def get_move_from_container(container: SandboxedAgent, board: Board, player: Player, timeout: float) -> Move:
-    """
-    Gets a move from the containerized agent running in the sandbox.
-    
-    Args:
-        container: The containerized agent
-        board: The current game board
-        player: The player making the move (1 or 2)
-        timeout: The time limit for the agent to generate a move
-    Returns:
-        Move: The selected column (0-6)
-        
-    Raises:
-        MoveTimeoutError: If agent exceeds time limit
-        AgentRuntimeError: If agent fails or returns invalid move
-    """
+    """Gets a move from the containerized agent running in the sandbox."""
     try:
         cmd = generate_move_cmd(board, player, timeout)
         output = container.exec_command(cmd)
-        move = int(output)
-        return Move(move)
+        
+        response = json.loads(output)
+        if response['status'] == 'error':
+            raise AgentRuntimeError(
+                f"Agent failed:\n"
+                f"Error: {response['error']}\n"
+                f"Traceback:\n{response['traceback']}"
+            )
+            
+        return Move(response['move'])
+    except json.JSONDecodeError:
+        raise AgentRuntimeError(f"Agent returned invalid JSON: {output}")
     except Exception as exc:
         raise AgentRuntimeError(f"Failed to get move: {str(exc)}") from exc
 
@@ -149,10 +160,24 @@ def get_generate_move_func_from_container(container: SandboxedAgent) -> Callable
     return generate_move
 
 def generate_move_cmd(board: Board, player: Player, timeout: float) -> str:
-    return (f"import json; import numpy as np; from agent import generate_move;"
-            f"board = np.array({board.tolist()}); "
-            f"move = generate_move(board, {int(player)}, {timeout}); "
-            f"print(json.dumps(int(move)))")
+    return (
+        "import json, numpy as np, traceback\n"
+        "try:\n"
+        "    from agent import generate_move\n"
+        "    board = np.array({board})\n"
+        "    move = generate_move(board, {player}, {timeout})\n"
+        "    print(json.dumps({{'status': 'success', 'move': int(move)}}))\n"
+        "except Exception as e:\n"
+        "    print(json.dumps({{\n"
+        "        'status': 'error',\n"
+        "        'error': str(e),\n"
+        "        'traceback': traceback.format_exc()\n"
+        "    }}))\n"
+    ).format(
+        board=board.tolist(),
+        player=int(player),
+        timeout=timeout
+    )
 
 def move_time_cmd(board: Board, player: Player, timeout: float) -> str:
     return (f"import time; import json; import numpy as np; from agent import generate_move;"
