@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "c4utils"
-version = "0.1.2"
+version = "0.1.3"
 description = "Utilities for C4 League"
 authors = [{ name = "Felix Lundt" }]
 readme = "README.md"
