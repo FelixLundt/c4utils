@@ -17,7 +17,7 @@ def is_valid_move(board: Board, move: Move, player: Player) -> bool:
     is_correct_type = isinstance(move, Move)
     if not is_correct_type:
         return False
-    is_in_bounds = 0 <= move <= BOARD_SIZE[1]
+    is_in_bounds = 0 <= move < BOARD_SIZE[1]
     if not is_in_bounds:
         return False
     is_open_row = board[-1, move] == 0
